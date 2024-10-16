@@ -1,0 +1,23 @@
+<h1>Todo Lists</h1>
+
+<%= form_with model: TodoList.new, local: true do |form| %>
+  <div>
+    <%= form.label :title, 'New Todo List Title' %>
+    <%= form.text_field :title, placeholder: 'Enter the title of your new list', required: true %>
+  </div>
+  <div>
+    <%= form.submit 'Create Todo List', class: 'button' %>
+  </div>
+<% end %>
+
+<ul>
+  <% @todo_lists.each do |list| %>
+    <li>
+      <%= link_to list.title, todo_list_path(list) %>
+      <span>
+        <%= link_to 'Edit', edit_todo_list_path(list), class: 'button' %> |
+        <%= button_to 'Delete', todo_list_path(list), method: :delete, data: { confirm: 'Are you sure?' }, class: 'button' %>
+      </span>
+    </li>
+  <% end %>
+</ul>

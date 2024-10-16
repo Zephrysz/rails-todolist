@@ -1,0 +1,23 @@
+<h1><%= @todo_list.title %></h1>
+
+<h2>Items</h2>
+
+<ul>
+  <% @todo_list.todo_items.each do |item| %>
+    <li>
+      <%= item.content %> 
+      <span>
+        <%= button_to 'Remove', todo_list_todo_item_path(@todo_list, item), method: :delete, data: { confirm: 'Are you sure?' }, class: 'button' %>
+      </span> 
+    </li>
+  <% end %>
+</ul>
+
+<h3>new item </h3>
+
+<%= form_with(model: [@todo_list, TodoItem.new]) do |form| %>
+  <%= form.text_field :content, placeholder: 'New item', class: 'form-control', required: true %>
+  <%= form.submit 'Add Item', class: 'button' %>
+<% end %>
+
+<%= link_to 'Back to lists', todo_lists_path %>
