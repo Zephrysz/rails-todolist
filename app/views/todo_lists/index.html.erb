@@ -1,80 +1,54 @@
-<h1 class="text-2xl font-bold mb-4">Todo Lists</h1>
+<div class="bg-blue-500 p-4 mb-4 flex justify-between items-center sticky top-0 z-10">
+  <h1 class="text-2xl font-bold">Todo Lists</h1>
+  <div>
+    <button id="new-list-btn" class="bg-green-500 text-white px-4 py-2 rounded">New Todo List</button>
+  </div>
+</div>
 
-<div class="relative">
-  <div id="todoCarousel" class="overflow-hidden">
-    <div class="flex transition-transform duration-300 ease-in-out" id="carousel-inner">
-      <% @todo_lists.each_with_index do |list, index| %>
-        <div class="min-w-full flex-shrink-0">
-          <div class="p-4 border border-gray-300 rounded-lg shadow-md">
-            <h2 class="text-xl font-semibold mb-2"><%= list.title %></h2>
 
-            <ul class="mb-4">
-              <% list.todo_items.each do |item| %>
-                <li class="flex justify-between items-center py-1">
-                  <span><%= item.content %></span> 
-                  <%= button_to 'Remove', todo_list_todo_item_path(list, item), method: :delete, data: { confirm: 'Are you sure?' }, class: 'btn btn-danger btn-sm' %>
-                </li>
-              <% end %>
-            </ul>
-
-            <h3 class="text-lg mb-2">New Item</h3>
+<div class="relative flex-1 p-4 bg-blue-600">
+  <div id="list-horizontal-scroll" class="relative w-full h-full">
+    <div class="flex overflow-x-auto space-x-8 w-30 bg-blue-600" id="scroll-inner" >
+      <% @todo_lists.each do |list| %>
+        <div class="flex-shrink-0 rounded-full p-2">
+          <div class="flex-shrink-0 p-4 rounded-lg shadow-md bg-blue-900">
+            <h2 class="flex-shrink-0 text-xl font-semibold mb-2 text-white"><%= list.title %></h2>
             <%= form_with(model: [list, TodoItem.new]) do |form| %>
               <div class="flex mb-2">
-                <%= form.text_field :content, placeholder: 'New item', class: 'form-input flex-grow', required: true %>
-                <%= form.submit 'Add Item', class: 'ml-2 bg-blue-500 text-white px-4 py-2 rounded' %>
+                <%= form.text_field :content, placeholder: 'New item', class: 'border border-gray-300 p-2 rounded flex-grow', required: true %>
+                <%= form.submit 'Add Item', class: 'ml-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition-colors' %>
+              </div>
             <% end %>
+            <div class=" overflow-y-auto">
+              <ul class=" text-white rounded mb-4">
+                <% list.todo_items.each do |item| %>
+                  <li class="flex justify-between items-center p-2 hover:bg-blue-700 transition-colors">
+                    <span><%= item.content %></span> 
+                    <%= button_to 'Remove', 
+                        todo_list_todo_item_path(list, item), 
+                        method: :delete, 
+                        data: { confirm: 'Are you sure?' }, 
+                        class: 'bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded transition-colors' %>
+                  </li>
+                <% end %>
+              </ul>
+            </div>
           </div>
         </div>
       <% end %>
     </div>
   </div>
-
-  <div class="absolute inset-y-0 left-0 flex items-center">
-    <button id="prev" class="bg-gray-700 text-white px-4 py-2 rounded-l">Previous</button>
-  </div>
-  <div class="absolute inset-y-0 right-0 flex items-center">
-    <button id="next" class="bg-gray-700 text-white px-4 py-2 rounded-r">Next</button>
-  </div>
 </div>
 
-<div class="my-4">
-  <%= form_with model: TodoList.new, local: true do |form| %>
-    <div class="flex">
-      <%= form.label :title, 'New Todo List Title', class: 'mr-2' %>
-      <%= form.text_field :title, placeholder: 'Enter the title of your new list', required: true, class: 'form-input flex-grow' %>
-      <%= form.submit 'Create Todo List', class: 'ml-2 bg-green-500 text-white px-4 py-2 rounded' %>
-    </div>
-  <% end %>
-</div>
 
 <script>
-  const prevButton = document.getElementById('prev');
-  const nextButton = document.getElementById('next');
-  const carouselInner = document.getElementById('carousel-inner');
-  let currentIndex = 0;
+const newListBtn = document.getElementById('new-list-btn');
+const newTodoForm = document.getElementById('new-todo-form');
 
-  const updateCarousel = () => {
-    const totalItems = <%= @todo_lists.count %>;
-    const translateX = -currentIndex * 100; 
-    carouselInner.style.transform = `translateX(${translateX}%)`;
 
-    prevButton.disabled = currentIndex === 0; // Disable prev button if on first item
-    nextButton.disabled = currentIndex === totalItems - 1; // Disable next button if on last item
-  };
-
-  prevButton.addEventListener('click', () => {
-    if (currentIndex > 0) {
-      currentIndex--;
-      updateCarousel();
-    }
+if (newTodoForm) {
+  newListBtn.addEventListener('click', () => {
+    newTodoForm.classList.toggle('hidden');
   });
-
-  nextButton.addEventListener('click', () => {
-    if (currentIndex < <%= @todo_lists.count %> - 1) {
-      currentIndex++;
-      updateCarousel();
-    }
-  });
-
-  updateCarousel(); // Initialize carousel position
+}
 </script>

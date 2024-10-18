@@ -1,8 +1,8 @@
 Rails.application.routes.draw do
   resources :todo_lists do
-    resources :todo_items, only: [:create, :destroy]
+    resources :todo_items, only: [ :create, :destroy ]
   end
-  root 'todo_lists#index'
+  root "todo_lists#index"
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
