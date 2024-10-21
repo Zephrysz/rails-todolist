@@ -1,10 +1,18 @@
-<div class="bg-blue-900 w-screen h-dvh">
- <%# title and new button  %>
+<div class="bg-blue-900 w-screen h-screen">
+  <%# title and new button %>
   <div class="p-4 flex justify-between items-center top-0 z-10">
     <h1 class="text-2xl text-white font-bold">Todo Lists</h1>
     <div>
-      <%= link_to 'New Todo List', new_todo_list_path, class: 'bg-green-500 text-white p-2 rounded' %> <!-- Navigates to the new list creation page -->
+      <button id="new-list-btn" class="bg-green-500 text-white p-2 rounded">New Todo List</button>
     </div>
+  </div>
+
+  <%# form for list title, hidden  %>
+  <div id="new-todo-list-form" class="p-4 hidden">
+    <%= form_with url: todo_lists_path, remote: true, id: "new-todo-list-form-element" do |form| %>
+      <%= form.text_field :title, placeholder: 'New List Title', class: 'border border-gray-300 rounded flex-grow', required: true, name: 'todo_list[title]' %>
+      <%= form.submit 'Create List', class: 'ml-2 p-2 bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors' %>
+    <% end %>
   </div>
 
   <div class="flex-1 p-4 h-full">
@@ -12,67 +20,62 @@
       <div class="relative flex overflow-x-auto rounded h-5/6 m-2 bg-blue-400" id="scroll-inner">
         <%# lists %>
         <% @todo_lists.each do |list| %>
-          <div class="flex-shrink-0 rounded-full p-2">
-            <div class="relative p-2 max-w-xs rounded-lg shadow-md bg-blue-900 h-full">
-              <div class="flex justify-between items-center">
-                
-                <%# list title %>
-                <h2 class="text-xl font-semibold text-white max-w-xs break-words p-2"><%= list.title %></h2>
-
-                <%# three dots menu %>
-                <div class="relative inline-block text-left">
-                  <button type="button" class="text-white hover:bg-blue-700 rounded focus:outline-none p-2 " id="menu-button-<%= list.id %>">
-                    &#x22EE; 
-                  </button>
-
-                  <div id="menu-options-<%= list.id %>" class="absolute hidden right-0 w-28 bg-slate-950 rounded-md shadow-lg py-1 text-white">
-                    <%= button_to 'Edit', edit_todo_list_path(list), method: :get, class: ' block w-full px-4 py-2 text-sm hover:bg-gray-600 text-white' %>
-                    <%= button_to 'Delete', todo_list_path(list), method: :delete, data: { confirm: 'Are you sure?' }, class: 'block w-full px-4 py-2 text-sm hover:bg-gray-600 text-red-500' %>
-                  </div>
-                </div>
-              </div>
-
-              <%# new item form %>
-              <%= form_with(model: [list, TodoItem.new], remote: true, id: "new-item-form-#{list.id}") do |form| %>
-                <div class="flex mb-2">
-                  <%= form.text_field :content, placeholder: 'New item', class: 'border border-gray-300 rounded flex-grow', required: true %>
-                  <%= form.submit 'Add Item', class: 'ml-2 p-2 bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors' %>
-                </div>
-              <% end %>
-
-              <div class="overflow-y-auto h-5/6" id = "todo-items-list-<%= list.id %>">
-                <ul class="text-white rounded mb-4">
-                  <%# items inside list %>
-                  <% list.todo_items.each do |item| %>
-                    <li class="flex justify-between items-center p-2 hover:bg-blue-700 transition-colors">
-                      <div class="flex-column items-center w-full">
-                        <input type="checkbox" id="item-<%= item.id %>" class="mr-2 rounded focus:ring-blue-400" <%= 'checked' if item.completed %>>
-                        <label for="item-<%= item.id %>" class="max-w-xs text-white break-words"><%= item.content %></label>
-                      </div>
-                    </li>
-                  <% end %>
-                </ul>
-              </div>
-            </div>
-          </div>
+          <%= render partial: 'todo_list', locals: { todo_list: list } %>
         <% end %>
       </div>
     </div>
   </div>
 </div>
 
+
 <script>
-// Handle the toggling of the 'new todo list' form
+// new list form 
 const newListBtn = document.getElementById('new-list-btn');
-const newTodoForm = document.getElementById('new-todo-form');
+const newTodoForm = document.getElementById('new-todo-list-form');
 
-if (newTodoForm) {
-  newListBtn.addEventListener('click', () => {
-    newTodoForm.classList.toggle('hidden');
+newListBtn.addEventListener('click', () => {
+  newTodoForm.classList.toggle('hidden');
+});
+
+document.getElementById('new-todo-list-form-element').addEventListener('submit', function(event) {
+  event.preventDefault();
+
+  const formData = new FormData(this);
+
+  fetch(this.action, {
+    method: 'POST',
+    headers: {
+      'Accept': 'text/html',
+      'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+    },
+    body: formData
+  })
+  .then(response => {
+    if (!response.ok) throw new Error("Failed to create list");
+    return response.text();
+  })
+  .then(html => {
+    const todoListsContainer = document.getElementById('scroll-inner');
+    todoListsContainer.insertAdjacentHTML('afterbegin', html);
+    
+    newTodoForm.classList.add('hidden');
+    this.reset();
+    
+    const newListId = html.match(/menu-button-(\d+)/)[1]; 
+    const menuButton = document.getElementById(`menu-button-${newListId}`);
+    const menuOptions = document.getElementById(`menu-options-${newListId}`);
+    menuButton.addEventListener('click', () => {
+      menuOptions.classList.toggle('hidden');
+    });
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('There was an error creating the new list.');
   });
-}
+});
 
-// Handle three-dot menu toggle for each list
+
+// three-dot menu
 document.querySelectorAll('[id^="menu-button-"]').forEach(button => {
   const menuId = button.id.replace('menu-button-', 'menu-options-');
   const menu = document.getElementById(menuId);
@@ -83,7 +86,7 @@ document.querySelectorAll('[id^="menu-button-"]').forEach(button => {
 });
 
 
-// Handle form submission using AJAX
+// creation of new items 
 document.querySelectorAll('[id^="new-item-form-"]').forEach(form => {
   form.addEventListener('submit', (event) => {
     event.preventDefault(); 
@@ -98,7 +101,10 @@ document.querySelectorAll('[id^="new-item-form-"]').forEach(form => {
       },
       body: formData
     })
-    .then(response => response.json())
+    .then(response => {
+      if (!response.ok) throw new Error('Failed to create item');
+      return response.json(); 
+    })
     .then(data => {
       const targetListId = data.todo_list_id;
       const targetList = document.getElementById(`todo-items-list-${targetListId}`);
@@ -115,8 +121,8 @@ document.querySelectorAll('[id^="new-item-form-"]').forEach(form => {
       form.reset(); // Reset the form after successful submission
     })
     .catch(error => {
-      console.error('Error:', error);
-      alert('There was an error submitting the form.');
+      console.error('Error:', error); 
+      alert('There was an error submitting the form');
     });
   });
 });

@@ -15,11 +15,17 @@ class TodoListsController < ApplicationController
 
     def create
       @todo_list = TodoList.new(todo_list_params)
+
       if @todo_list.save
-        redirect_to @todo_list, notice: "Todo List was successfully created."
+        respond_to do |format|
+          format.json { render json: { id: @todo_list.id, title: @todo_list.title } }
+          format.html { render partial: "todo_lists/todo_list", locals: { todo_list: @todo_list }, status: :created } # HTML fallback
+        end
       else
-        @todo_lists = TodoList.all
-        render :index
+        respond_to do |format|
+          format.json { render json: @todo_list.errors, status: :unprocessable_entity }
+          format.html { render :new, alert: "Error creating list." }
+        end
       end
     end
 

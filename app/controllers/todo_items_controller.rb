@@ -9,12 +9,12 @@ class TodoItemsController < ApplicationController
       if @todo_item.save
         respond_to do |format|
           format.json { render json: { id: @todo_item.id, content: @todo_item.content, todo_list_id: @todo_list.id } }
-          # format.html { redirect_to @todo_list } # Ensure HTML format redirects back to the list
+          format.html { redirect_to @todo_list, notice: "Todo item was successfully created." }
         end
       else
         respond_to do |format|
           format.json { render json: @todo_item.errors, status: :unprocessable_entity }
-          format.html { redirect_to @todo_list, alert: "There was an error." } # HTML fallback in case of errors
+          format.html { redirect_to @todo_list, alert: "There was an error." }
         end
       end
     end
