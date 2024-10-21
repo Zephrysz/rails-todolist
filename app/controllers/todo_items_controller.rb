@@ -3,11 +3,19 @@ class TodoItemsController < ApplicationController
     before_action :set_todo_item, only: [ :destroy ]
 
     def create
+      @todo_list = TodoList.find(params[:todo_list_id])
       @todo_item = @todo_list.todo_items.build(todo_item_params)
+
       if @todo_item.save
-        redirect_to @todo_list, notice: "Todo Item was successfully added."
+        respond_to do |format|
+          format.json { render json: { id: @todo_item.id, content: @todo_item.content, todo_list_id: @todo_list.id } }
+          # format.html { redirect_to @todo_list } # Ensure HTML format redirects back to the list
+        end
       else
-        redirect_to @todo_list, alert: "Unable to add Todo Item."
+        respond_to do |format|
+          format.json { render json: @todo_item.errors, status: :unprocessable_entity }
+          format.html { redirect_to @todo_list, alert: "There was an error." } # HTML fallback in case of errors
+        end
       end
     end
 

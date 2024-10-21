@@ -1,4 +1,4 @@
-<div class="bg-blue-900 w-screen h-screen">
+<div class="bg-blue-900 w-screen h-dvh">
  <%# title and new button  %>
   <div class="p-4 flex justify-between items-center top-0 z-10">
     <h1 class="text-2xl text-white font-bold">Todo Lists</h1>
@@ -8,12 +8,12 @@
   </div>
 
   <div class="flex-1 p-4 h-full">
-    <div id="list-horizontal-scroll" class="w-full h-full">
-      <div class="relative flex overflow-x-auto rounded border h-5/6 m-2 bg-blue-300" id="scroll-inner">
+    <div id="list-horizontal-scroll" class="w-full h-screen">
+      <div class="relative flex overflow-x-auto rounded h-5/6 m-2 bg-blue-400" id="scroll-inner">
         <%# lists %>
         <% @todo_lists.each do |list| %>
           <div class="flex-shrink-0 rounded-full p-2">
-            <div class="relative p-2 max-w-xs rounded-lg shadow-md bg-blue-900 h-full overflow-y-auto">
+            <div class="relative p-2 max-w-xs rounded-lg shadow-md bg-blue-900 h-full">
               <div class="flex justify-between items-center">
                 
                 <%# list title %>
@@ -25,29 +25,29 @@
                     &#x22EE; 
                   </button>
 
-                  <div id="menu-options-<%= list.id %>" class="absolute hidden right-0 w-28 bg-slate-950 rounded-md shadow-lg py-1 text-gray-700">
-                    <%= button_to 'Edit', edit_todo_list_path(list), method: :get, class: 'block px-4 py-2 text-sm hover:bg-gray-200 text-white' %>
-                    <%= button_to 'Delete', todo_list_path(list), method: :delete, data: { confirm: 'Are you sure?' }, class: 'block px-4 py-2 text-sm hover:bg-gray-200 text-red-500' %>
+                  <div id="menu-options-<%= list.id %>" class="absolute hidden right-0 w-28 bg-slate-950 rounded-md shadow-lg py-1 text-white">
+                    <%= button_to 'Edit', edit_todo_list_path(list), method: :get, class: ' block w-full px-4 py-2 text-sm hover:bg-gray-600 text-white' %>
+                    <%= button_to 'Delete', todo_list_path(list), method: :delete, data: { confirm: 'Are you sure?' }, class: 'block w-full px-4 py-2 text-sm hover:bg-gray-600 text-red-500' %>
                   </div>
                 </div>
               </div>
 
               <%# new item form %>
-              <%= form_with(model: [list, TodoItem.new]) do |form| %>
+              <%= form_with(model: [list, TodoItem.new], remote: true, id: "new-item-form-#{list.id}") do |form| %>
                 <div class="flex mb-2">
                   <%= form.text_field :content, placeholder: 'New item', class: 'border border-gray-300 rounded flex-grow', required: true %>
                   <%= form.submit 'Add Item', class: 'ml-2 p-2 bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors' %>
                 </div>
               <% end %>
 
-              <div class="overflow-y-auto h-full">
+              <div class="overflow-y-auto h-5/6" id = "todo-items-list-<%= list.id %>">
                 <ul class="text-white rounded mb-4">
                   <%# items inside list %>
                   <% list.todo_items.each do |item| %>
                     <li class="flex justify-between items-center p-2 hover:bg-blue-700 transition-colors">
                       <div class="flex-column items-center w-full">
-                        <input type="checkbox" id="item-<%= item.id %>" class="mr-2 rounded text-blue-500 focus:ring-blue-400" <%= 'checked' if item.completed %>>
-                        <label for="item-<%= item.id %>" class="max-w-xs break-words"><%= item.content %></label>
+                        <input type="checkbox" id="item-<%= item.id %>" class="mr-2 rounded focus:ring-blue-400" <%= 'checked' if item.completed %>>
+                        <label for="item-<%= item.id %>" class="max-w-xs text-white break-words"><%= item.content %></label>
                       </div>
                     </li>
                   <% end %>
@@ -81,4 +81,45 @@ document.querySelectorAll('[id^="menu-button-"]').forEach(button => {
     menu.classList.toggle('hidden');
   });
 });
+
+
+// Handle form submission using AJAX
+document.querySelectorAll('[id^="new-item-form-"]').forEach(form => {
+  form.addEventListener('submit', (event) => {
+    event.preventDefault(); 
+    
+    const formData = new FormData(form); 
+    
+    fetch(form.action, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+      },
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      const targetListId = data.todo_list_id;
+      const targetList = document.getElementById(`todo-items-list-${targetListId}`);
+
+      // Insert the new item into the list
+      targetList.innerHTML += `
+        <li class="flex justify-between items-center hover:bg-blue-700 transition-colors p-2">
+          <div class="flex-column items-center w-full">
+            <input type="checkbox" id="item-${data.id}" class="mr-2 rounded focus:ring-blue-400">
+            <label for="item-${data.id}" class="max-w-xs break-words text-white">${data.content}</label>
+          </div>
+        </li>`;
+      
+      form.reset(); // Reset the form after successful submission
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('There was an error submitting the form.');
+    });
+  });
+});
+
+
 </script>

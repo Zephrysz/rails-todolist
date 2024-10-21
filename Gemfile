@@ -20,7 +20,7 @@ gem "jbuilder"
 # gem "redis", ">= 4.0.1"
 # Use Tailwind CSS [https://github.com/rails/tailwindcss-rails]
 gem "tailwindcss-rails"
-gem 'rails-ujs' # For Rails 5+
+gem "rails-ujs" # For Rails 5+
 
 # Use Kredis to get higher-level data types in Redis [https://github.com/rails/kredis]
 # gem "kredis"
