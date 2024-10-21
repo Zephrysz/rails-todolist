@@ -1,54 +1,84 @@
-<div class="bg-blue-500 p-4 mb-4 flex justify-between items-center sticky top-0 z-10">
-  <h1 class="text-2xl font-bold">Todo Lists</h1>
-  <div>
-    <button id="new-list-btn" class="bg-green-500 text-white px-4 py-2 rounded">New Todo List</button>
+<div class="bg-blue-900 w-screen h-screen">
+ <%# title and new button  %>
+  <div class="p-4 flex justify-between items-center top-0 z-10">
+    <h1 class="text-2xl text-white font-bold">Todo Lists</h1>
+    <div>
+      <%= link_to 'New Todo List', new_todo_list_path, class: 'bg-green-500 text-white p-2 rounded' %> <!-- Navigates to the new list creation page -->
+    </div>
   </div>
-</div>
 
+  <div class="flex-1 p-4 h-full">
+    <div id="list-horizontal-scroll" class="w-full h-full">
+      <div class="relative flex overflow-x-auto rounded border h-5/6 m-2 bg-blue-300" id="scroll-inner">
+        <%# lists %>
+        <% @todo_lists.each do |list| %>
+          <div class="flex-shrink-0 rounded-full p-2">
+            <div class="relative p-2 max-w-xs rounded-lg shadow-md bg-blue-900 h-full overflow-y-auto">
+              <div class="flex justify-between items-center">
+                
+                <%# list title %>
+                <h2 class="text-xl font-semibold text-white max-w-xs break-words p-2"><%= list.title %></h2>
 
-<div class="relative flex-1 p-4 bg-blue-600">
-  <div id="list-horizontal-scroll" class="relative w-full h-full">
-    <div class="flex overflow-x-auto space-x-8 w-30 bg-blue-600" id="scroll-inner" >
-      <% @todo_lists.each do |list| %>
-        <div class="flex-shrink-0 rounded-full p-2">
-          <div class="flex-shrink-0 p-4 rounded-lg shadow-md bg-blue-900">
-            <h2 class="flex-shrink-0 text-xl font-semibold mb-2 text-white"><%= list.title %></h2>
-            <%= form_with(model: [list, TodoItem.new]) do |form| %>
-              <div class="flex mb-2">
-                <%= form.text_field :content, placeholder: 'New item', class: 'border border-gray-300 p-2 rounded flex-grow', required: true %>
-                <%= form.submit 'Add Item', class: 'ml-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition-colors' %>
+                <%# three dots menu %>
+                <div class="relative inline-block text-left">
+                  <button type="button" class="text-white hover:bg-blue-700 rounded focus:outline-none p-2 " id="menu-button-<%= list.id %>">
+                    &#x22EE; 
+                  </button>
+
+                  <div id="menu-options-<%= list.id %>" class="absolute hidden right-0 w-28 bg-slate-950 rounded-md shadow-lg py-1 text-gray-700">
+                    <%= button_to 'Edit', edit_todo_list_path(list), method: :get, class: 'block px-4 py-2 text-sm hover:bg-gray-200 text-white' %>
+                    <%= button_to 'Delete', todo_list_path(list), method: :delete, data: { confirm: 'Are you sure?' }, class: 'block px-4 py-2 text-sm hover:bg-gray-200 text-red-500' %>
+                  </div>
+                </div>
               </div>
-            <% end %>
-            <div class=" overflow-y-auto">
-              <ul class=" text-white rounded mb-4">
-                <% list.todo_items.each do |item| %>
-                  <li class="flex justify-between items-center p-2 hover:bg-blue-700 transition-colors">
-                    <span><%= item.content %></span> 
-                    <%= button_to 'Remove', 
-                        todo_list_todo_item_path(list, item), 
-                        method: :delete, 
-                        data: { confirm: 'Are you sure?' }, 
-                        class: 'bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded transition-colors' %>
-                  </li>
-                <% end %>
-              </ul>
+
+              <%# new item form %>
+              <%= form_with(model: [list, TodoItem.new]) do |form| %>
+                <div class="flex mb-2">
+                  <%= form.text_field :content, placeholder: 'New item', class: 'border border-gray-300 rounded flex-grow', required: true %>
+                  <%= form.submit 'Add Item', class: 'ml-2 p-2 bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors' %>
+                </div>
+              <% end %>
+
+              <div class="overflow-y-auto h-full">
+                <ul class="text-white rounded mb-4">
+                  <%# items inside list %>
+                  <% list.todo_items.each do |item| %>
+                    <li class="flex justify-between items-center p-2 hover:bg-blue-700 transition-colors">
+                      <div class="flex-column items-center w-full">
+                        <input type="checkbox" id="item-<%= item.id %>" class="mr-2 rounded text-blue-500 focus:ring-blue-400" <%= 'checked' if item.completed %>>
+                        <label for="item-<%= item.id %>" class="max-w-xs break-words"><%= item.content %></label>
+                      </div>
+                    </li>
+                  <% end %>
+                </ul>
+              </div>
             </div>
           </div>
-        </div>
-      <% end %>
+        <% end %>
+      </div>
     </div>
   </div>
 </div>
 
-
 <script>
+// Handle the toggling of the 'new todo list' form
 const newListBtn = document.getElementById('new-list-btn');
 const newTodoForm = document.getElementById('new-todo-form');
-
 
 if (newTodoForm) {
   newListBtn.addEventListener('click', () => {
     newTodoForm.classList.toggle('hidden');
   });
 }
+
+// Handle three-dot menu toggle for each list
+document.querySelectorAll('[id^="menu-button-"]').forEach(button => {
+  const menuId = button.id.replace('menu-button-', 'menu-options-');
+  const menu = document.getElementById(menuId);
+  
+  button.addEventListener('click', () => {
+    menu.classList.toggle('hidden');
+  });
+});
 </script>
