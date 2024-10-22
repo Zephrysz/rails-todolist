@@ -45,6 +45,18 @@ class TodoListsController < ApplicationController
       redirect_to todo_lists_url, notice: "Todo List was successfully destroyed."
     end
 
+    def update_order
+      order = params[:order]
+
+      TodoList.transaction do
+          order.each_with_index do |id, index|
+              TodoList.where(id: id).update_all(position: index)
+          end
+      end
+
+      render json: { message: "Order updated successfully" }, status: :ok
+    end
+
     private
       def set_todo_list
         @todo_list = TodoList.find(params[:id])

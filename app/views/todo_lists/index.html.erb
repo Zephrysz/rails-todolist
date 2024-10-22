@@ -19,7 +19,7 @@
     <div id="list-horizontal-scroll" class="w-full h-screen">
       <div class="relative flex overflow-x-auto rounded h-5/6 m-2 bg-blue-400" id="scroll-inner">
         <%# lists %>
-        <% @todo_lists.each do |list| %>
+        <% @todo_lists.order(:position).each do |list| %>
           <%= render partial: 'todo_list', locals: { todo_list: list } %>
         <% end %>
       </div>
@@ -29,14 +29,141 @@
 
 
 <script>
-// new list form 
+
 const newListBtn = document.getElementById('new-list-btn');
 const newTodoForm = document.getElementById('new-todo-list-form');
 
+// new list button form 
 newListBtn.addEventListener('click', () => {
-  newTodoForm.classList.toggle('hidden');
+  if (newTodoForm.classList.contains('hidden')) {
+    newTodoForm.classList.remove('hidden');
+  } else {
+    newTodoForm.classList.add('hidden');
+  }
 });
 
+// drag and drop backend
+function updateListOrder() {
+    const listOrder = Array.from(document.querySelectorAll('.flex-shrink-0'))
+        .map(list => list.getAttribute('data-id')); // Get IDs of lists in order
+
+    fetch('/todo_lists/update_order', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({ order: listOrder }) // Send the new order to the server
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Failed to update order');
+        return response.json();
+    })
+    .then(data => {
+        console.log('Order updated successfully:', data);
+    })
+    .catch(error => {
+        console.error('Error updating order:', error);
+    });
+}
+
+
+function setupListEventListeners(listElement) {
+  // drag and drop 
+  // style not working for some raeson
+  listElement.addEventListener('dragstart', (event) => {
+    draggedList = event.target;
+    event.target.classList.add('opacity-50', 'scale-105');
+  });
+
+  listElement.addEventListener('dragend', (event) => {
+    event.target.classList.remove('opacity-50', 'scale-105');
+  });
+
+  listElement.addEventListener('dragover', (event) => {
+    event.preventDefault();
+  });
+
+  listElement.addEventListener('dragenter', (event) => {
+    if (event.target.classList.contains('flex-shrink-0')) {
+      event.target.classList.add('border-2', 'border-dashed', 'border-white', 'bg-white/20');
+    }
+  });
+
+  listElement.addEventListener('dragleave', (event) => {
+    if (event.target.classList.contains('flex-shrink-0')) {
+      event.target.classList.remove('border-2', 'border-dashed', 'border-white', 'bg-white/20');
+    }
+  });
+
+  listElement.addEventListener('drop', (event) => {
+    event.preventDefault();
+    if (event.target.closest('.flex-shrink-0') && draggedList) {
+      const targetList = event.target.closest('.flex-shrink-0');
+      if (draggedList !== targetList) {
+        const parent = draggedList.parentNode;
+        parent.insertBefore(draggedList, targetList);
+        targetList.classList.remove('border-2', 'border-dashed', 'border-white', 'bg-white/20');
+        updateListOrder(); // Update order on the backend
+      }
+    }
+  });
+
+  // three dot menu 
+  const menuButton = listElement.querySelector('[id^="menu-button-"]');
+  if (menuButton) {
+    const menuId = menuButton.id.replace('menu-button-', 'menu-options-');
+    const menu = document.getElementById(menuId);
+    menuButton.addEventListener('click', () => {
+      menu.classList.toggle('hidden');
+    });
+  }
+
+  // item creation form 
+  const newItemForm = listElement.querySelector('[id^="new-item-form-"]');
+  if (newItemForm) {
+    newItemForm.addEventListener('submit', function(event) {
+      event.preventDefault();
+      const formData = new FormData(this);
+
+      fetch(this.action, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: formData
+      })
+      .then(response => {
+        if (!response.ok) throw new Error('Failed to create item');
+        return response.json();
+      })
+      .then(data => {
+        const targetListId = data.todo_list_id;
+        const targetList = document.getElementById(`todo-items-list-${targetListId}`);
+        targetList.innerHTML += `
+          <li class="flex justify-between items-center hover:bg-blue-700 transition-colors p-2">
+            <div class="flex-column items-center w-full cursor-pointer" onclick="toggleCheckbox('item-${data.id}')">
+              <input type="checkbox" id="item-${data.id}" class="mr-2 rounded">
+              <label for="item-${data.id}" class="max-w-xs break-words text-white">${data.content}</label>
+            </div>
+          </li>`;
+        this.reset();
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('There was an error submitting the form');
+      });
+    });
+  }
+}
+
+// Call this function for all existing lists 
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.flex-shrink-0').forEach(setupListEventListeners);
+});
+
+// new list creation and dynamic events 
 document.getElementById('new-todo-list-form-element').addEventListener('submit', function(event) {
   event.preventDefault();
 
@@ -57,75 +184,18 @@ document.getElementById('new-todo-list-form-element').addEventListener('submit',
   .then(html => {
     const todoListsContainer = document.getElementById('scroll-inner');
     todoListsContainer.insertAdjacentHTML('afterbegin', html);
-    
+
     newTodoForm.classList.add('hidden');
     this.reset();
-    
-    const newListId = html.match(/menu-button-(\d+)/)[1]; 
-    const menuButton = document.getElementById(`menu-button-${newListId}`);
-    const menuOptions = document.getElementById(`menu-options-${newListId}`);
-    menuButton.addEventListener('click', () => {
-      menuOptions.classList.toggle('hidden');
-    });
+
+    // Get the new list element and set up event listeners for it
+    const newList = todoListsContainer.firstElementChild; 
+    setupListEventListeners(newList); // Attach event listeners to the new list
   })
   .catch(error => {
     console.error('Error:', error);
     alert('There was an error creating the new list.');
   });
 });
-
-
-// three-dot menu
-document.querySelectorAll('[id^="menu-button-"]').forEach(button => {
-  const menuId = button.id.replace('menu-button-', 'menu-options-');
-  const menu = document.getElementById(menuId);
-  
-  button.addEventListener('click', () => {
-    menu.classList.toggle('hidden');
-  });
-});
-
-
-// creation of new items 
-document.querySelectorAll('[id^="new-item-form-"]').forEach(form => {
-  form.addEventListener('submit', (event) => {
-    event.preventDefault(); 
-    
-    const formData = new FormData(form); 
-    
-    fetch(form.action, {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-      },
-      body: formData
-    })
-    .then(response => {
-      if (!response.ok) throw new Error('Failed to create item');
-      return response.json(); 
-    })
-    .then(data => {
-      const targetListId = data.todo_list_id;
-      const targetList = document.getElementById(`todo-items-list-${targetListId}`);
-
-      // Insert the new item into the list
-      targetList.innerHTML += `
-        <li class="flex justify-between items-center hover:bg-blue-700 transition-colors p-2">
-          <div class="flex-column items-center w-full">
-            <input type="checkbox" id="item-${data.id}" class="mr-2 rounded focus:ring-blue-400">
-            <label for="item-${data.id}" class="max-w-xs break-words text-white">${data.content}</label>
-          </div>
-        </li>`;
-      
-      form.reset(); // Reset the form after successful submission
-    })
-    .catch(error => {
-      console.error('Error:', error); 
-      alert('There was an error submitting the form');
-    });
-  });
-});
-
 
 </script>

@@ -1,7 +1,11 @@
 Rails.application.routes.draw do
   resources :todo_lists do
     resources :todo_items, only: [ :create, :destroy ]
+    collection do
+      post "update_order"
+    end
   end
+
   root "todo_lists#index"
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

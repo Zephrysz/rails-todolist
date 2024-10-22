@@ -1,9 +1,10 @@
-<div class="flex-shrink-0 rounded-full p-2">
+<%# this flex-shrink-0 is important dont remove it %>
+<div class="flex-shrink-0 rounded-full p-2" draggable="true" data-id="<%= todo_list.id %>">
     <div class="relative p-2 max-w-xs rounded-lg shadow-md bg-blue-900 h-full">
         <div class="flex justify-between items-center">
         
         <%# todo_list title %>
-        <h2 class="text-xl font-semibold text-white max-w-xs break-words p-2"><%= todo_list.title %></h2>
+        <h2 class="text-xl font-semibold text-white max-w-60 break-words"><%= todo_list.title %></h2>
 
         <%# three dots menu %>
         <div class="relative inline-block text-left">
@@ -26,18 +27,18 @@
         </div>
         <% end %>
 
-        <div class="overflow-y-auto h-5/6" id = "todo-items-list-<%= todo_list.id %>">
-        <ul class="text-white rounded mb-4">
-            <%# items inside todo_list %>
-            <% todo_list.todo_items.each do |item| %>
-            <li class="flex justify-between items-center p-2 hover:bg-blue-700 transition-colors">
-                <div class="flex-column items-center w-full">
-                <input type="checkbox" id="item-<%= item.id %>" class="mr-2 rounded focus:ring-blue-400" <%= 'checked' if item.completed %>>
-                <label for="item-<%= item.id %>" class="max-w-xs text-white break-words"><%= item.content %></label>
-                </div>
-            </li>
-            <% end %>
-        </ul>
+        <div class="overflow-y-auto h-5/6" id="todo-items-list-<%= todo_list.id %>">
+            <ul class="text-white rounded mb-4">
+                <%# items inside todo_list %>
+                <% todo_list.todo_items.each do |item| %>
+                <li class="flex justify-between items-center p-2 hover:bg-blue-700 transition-colors">
+                    <div class="flex-column items-center w-full">
+                    <input type="checkbox" id="item-<%= item.id %>" class="mr-2 rounded focus:ring-blue-400" <%= 'checked' if item.completed %>>
+                    <label for="item-<%= item.id %>" class="max-w-xs text-white break-words"><%= item.content %></label>
+                    </div>
+                </li>
+                <% end %>
+            </ul>
         </div>
     </div>
-    </div>
+</div>
