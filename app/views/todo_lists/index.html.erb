@@ -1,23 +1,20 @@
-<div class="bg-blue-900 w-screen h-screen">
+<div class="bg-blue-900 w-screen h-screen overflow-hidden">
   <%# title and new button %>
   <div class="p-4 flex justify-between items-center top-0 z-10">
     <h1 class="text-2xl text-white font-bold">Todo Lists</h1>
-    <div>
-      <button id="new-list-btn" class="bg-green-500 text-white p-2 rounded">New Todo List</button>
+
+    <%# form for list title, not hidden anymore  %>
+    <div id="new-todo-list-form" class="">
+      <%= form_with url: todo_lists_path, remote: true, id: "new-todo-list-form-element" do |form| %>
+        <%= form.text_field :title, placeholder: 'New List Title', class: 'border border-gray-300 rounded flex-grow', required: true, name: 'todo_list[title]' %>
+        <%= form.submit 'Create List', class: 'ml-2 p-2 bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors' %>
+      <% end %>
     </div>
   </div>
 
-  <%# form for list title, hidden  %>
-  <div id="new-todo-list-form" class="p-4 hidden">
-    <%= form_with url: todo_lists_path, remote: true, id: "new-todo-list-form-element" do |form| %>
-      <%= form.text_field :title, placeholder: 'New List Title', class: 'border border-gray-300 rounded flex-grow', required: true, name: 'todo_list[title]' %>
-      <%= form.submit 'Create List', class: 'ml-2 p-2 bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors' %>
-    <% end %>
-  </div>
-
-  <div class="flex-1 p-4 h-full">
-    <div id="list-horizontal-scroll" class="w-full h-screen">
-      <div class="relative flex overflow-x-auto rounded h-5/6 m-2 bg-blue-400" id="scroll-inner">
+  <div class="flex-1 p-4 h-screen">
+    <div id="list-horizontal-scroll" class="w-full h-screen scale">
+      <div class="relative flex overflow-x-auto rounded h-5/6 m-4 p-4 bg-blue-400 " id="scroll-inner">
         <%# lists %>
         <% @todo_lists.order(:position).each do |list| %>
           <%= render partial: 'todo_list', locals: { todo_list: list } %>
@@ -30,17 +27,17 @@
 
 <script>
 
-const newListBtn = document.getElementById('new-list-btn');
+// const newListBtn = document.getElementById('new-list-btn');
 const newTodoForm = document.getElementById('new-todo-list-form');
 
-// new list button form 
-newListBtn.addEventListener('click', () => {
-  if (newTodoForm.classList.contains('hidden')) {
-    newTodoForm.classList.remove('hidden');
-  } else {
-    newTodoForm.classList.add('hidden');
-  }
-});
+// // new list button form 
+// newListBtn.addEventListener('click', () => {
+//   if (newTodoForm.classList.contains('hidden')) {
+//     newTodoForm.classList.remove('hidden');
+//   } else {
+//     newTodoForm.classList.add('hidden');
+//   }
+// });
 
 // drag and drop backend
 function updateListOrder() {
@@ -70,42 +67,56 @@ function updateListOrder() {
 
 function setupListEventListeners(listElement) {
   // drag and drop 
-  // style not working for some raeson
   listElement.addEventListener('dragstart', (event) => {
     draggedList = event.target;
-    event.target.classList.add('opacity-50', 'scale-105');
+    event.target.classList.add('border-white', 'scale-105', 'shadow-lg', 'shadow-blue-500/50', 'transition-transform', 'duration-300');
   });
 
   listElement.addEventListener('dragend', (event) => {
-    event.target.classList.remove('opacity-50', 'scale-105');
+    event.target.classList.remove('border-white', 'scale-105', 'shadow-lg', 'shadow-blue-500/50', 'transition-transform', 'duration-300');
   });
 
   listElement.addEventListener('dragover', (event) => {
     event.preventDefault();
+    const targetList = event.target.closest('.flex-shrink-0');
+    if (targetList && targetList !== draggedList) {
+      targetList.classList.add('border-4', 'border-white');
+    }
   });
 
   listElement.addEventListener('dragenter', (event) => {
-    if (event.target.classList.contains('flex-shrink-0')) {
-      event.target.classList.add('border-2', 'border-dashed', 'border-white', 'bg-white/20');
-    }
+    event.preventDefault();
+    // const targetList = event.target.closest('.flex-shrink-0');
+    // if (targetList && targetList !== draggedList) {
+    //   targetList.classList.add('border-4', 'border-white');
+    // }
   });
 
   listElement.addEventListener('dragleave', (event) => {
-    if (event.target.classList.contains('flex-shrink-0')) {
-      event.target.classList.remove('border-2', 'border-dashed', 'border-white', 'bg-white/20');
+    event.preventDefault();
+    const targetList = event.target.closest('.flex-shrink-0');
+    if (targetList && targetList !== draggedList) {
+      targetList.classList.remove('border-4', 'border-white');
     }
   });
-
   listElement.addEventListener('drop', (event) => {
     event.preventDefault();
-    if (event.target.closest('.flex-shrink-0') && draggedList) {
-      const targetList = event.target.closest('.flex-shrink-0');
-      if (draggedList !== targetList) {
-        const parent = draggedList.parentNode;
-        parent.insertBefore(draggedList, targetList);
-        targetList.classList.remove('border-2', 'border-dashed', 'border-white', 'bg-white/20');
-        updateListOrder(); // Update order on the backend
+    const targetList = event.target.closest('.flex-shrink-0');
+    if (draggedList && targetList && draggedList !== targetList) {
+      targetList.classList.remove('border-4', 'border-white');
+      const parent = draggedList.parentNode;
+      const draggedIndex = Array.from(parent.children).indexOf(draggedList);
+      const targetIndex = Array.from(parent.children).indexOf(targetList);
+
+      // Determine whether to insert before or after the target
+      if (draggedIndex < targetIndex) {
+        parent.insertBefore(draggedList, targetList.nextSibling); // Insert after the target
+      } else {
+        parent.insertBefore(draggedList, targetList); // Insert before the target
       }
+
+      targetList.classList.remove('border-2', 'border-dashed', 'border-white', 'bg-white/20');
+      updateListOrder(); // Update order on the backend
     }
   });
 
@@ -144,7 +155,7 @@ function setupListEventListeners(listElement) {
         targetList.innerHTML += `
           <li class="flex justify-between items-center hover:bg-blue-700 transition-colors p-2">
             <div class="flex-column items-center w-full cursor-pointer" onclick="toggleCheckbox('item-${data.id}')">
-              <input type="checkbox" id="item-${data.id}" class="mr-2 rounded">
+              <input type="checkbox" id="item-${data.id}" class="mr-2 rounded" ${data.completed ? 'checked' : ''}>
               <label for="item-${data.id}" class="max-w-xs break-words text-white">${data.content}</label>
             </div>
           </li>`;
@@ -185,11 +196,11 @@ document.getElementById('new-todo-list-form-element').addEventListener('submit',
     const todoListsContainer = document.getElementById('scroll-inner');
     todoListsContainer.insertAdjacentHTML('afterbegin', html);
 
-    newTodoForm.classList.add('hidden');
+    // newTodoForm.classList.add('hidden');
     this.reset();
 
     // Get the new list element and set up event listeners for it
-    const newList = todoListsContainer.firstElementChild; 
+    const newList = todoListsContainer.children[0]; 
     setupListEventListeners(newList); // Attach event listeners to the new list
   })
   .catch(error => {

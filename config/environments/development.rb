@@ -64,6 +64,11 @@ Rails.application.configure do
   # Suppress logger output for asset requests.
   config.assets.quiet = true
 
+  # tailwindcss auto-reload (i think)
+  config.assets.prefix = "/dev-assets"
+  config.assets.debug = true
+
+
   # Raises error for missing translations.
   # config.i18n.raise_on_missing_translations = true
 

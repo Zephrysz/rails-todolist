@@ -1,44 +1,43 @@
 <%# this flex-shrink-0 is important dont remove it %>
-<div class="flex-shrink-0 rounded-full p-2" draggable="true" data-id="<%= todo_list.id %>">
-    <div class="relative p-2 max-w-xs rounded-lg shadow-md bg-blue-900 h-full">
-        <div class="flex justify-between items-center">
-        
-        <%# todo_list title %>
-        <h2 class="text-xl font-semibold text-white max-w-60 break-words"><%= todo_list.title %></h2>
+<div class="flex-shrink-0 relative p-4 max-w-xs rounded-lg shadow-md bg-blue-900 h-auto m-2", draggable="true" data-id="<%= todo_list.id %>">
+    <div class="flex justify-between items-center">
+    
+    <%# todo_list title %>
+    <h2 class="text-xl font-semibold text-white max-w-60 break-words mb-2"><%= todo_list.title %></h2>
 
-        <%# three dots menu %>
-        <div class="relative inline-block text-left">
-            <button type="button" class="text-white hover:bg-blue-700 rounded focus:outline-none p-2 " id="menu-button-<%= todo_list.id %>">
-            &#x22EE; 
-            </button>
+    <%# three dots menu %>
+    <div class="relative inline-block text-left">
+        <button type="button" class="text-white text-xl hover:bg-blue-700 aspect-square rounded focus:outline-none w-8 mb-2" id="menu-button-<%= todo_list.id %>">
+        &#x22EE; 
+        </button>
 
-            <div id="menu-options-<%= todo_list.id %>" class="absolute hidden right-0 w-28 bg-slate-950 rounded-md shadow-lg py-1 text-white">
-            <%= button_to 'Edit', edit_todo_list_path(todo_list), method: :get, class: ' block w-full px-4 py-2 text-sm hover:bg-gray-600 text-white' %>
-            <%= button_to 'Delete', todo_list_path(todo_list), method: :delete, data: { confirm: 'Are you sure?' }, class: 'block w-full px-4 py-2 text-sm hover:bg-gray-600 text-red-500' %>
-            </div>
-        </div>
-        </div>
-
-        <%# new item form %>
-        <%= form_with(model: [todo_list, TodoItem.new], remote: true, id: "new-item-form-#{todo_list.id}") do |form| %>
-        <div class="flex mb-2">
-            <%= form.text_field :content, placeholder: 'New item', class: 'border border-gray-300 rounded flex-grow', required: true %>
-            <%= form.submit 'Add Item', class: 'ml-2 p-2 bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors' %>
-        </div>
-        <% end %>
-
-        <div class="overflow-y-auto h-5/6" id="todo-items-list-<%= todo_list.id %>">
-            <ul class="text-white rounded mb-4">
-                <%# items inside todo_list %>
-                <% todo_list.todo_items.each do |item| %>
-                <li class="flex justify-between items-center p-2 hover:bg-blue-700 transition-colors">
-                    <div class="flex-column items-center w-full">
-                    <input type="checkbox" id="item-<%= item.id %>" class="mr-2 rounded focus:ring-blue-400" <%= 'checked' if item.completed %>>
-                    <label for="item-<%= item.id %>" class="max-w-xs text-white break-words"><%= item.content %></label>
-                    </div>
-                </li>
-                <% end %>
-            </ul>
+        <div id="menu-options-<%= todo_list.id %>" class="absolute hidden right-0 w-28 bg-slate-950 rounded-md shadow-lg py-1 text-white">
+        <%= button_to 'Edit', edit_todo_list_path(todo_list), method: :get, class: ' block w-full px-4 py-2 text-sm hover:bg-gray-600 text-white' %>
+        <%= button_to 'Delete', todo_list_path(todo_list), method: :delete, data: { confirm: 'Are you sure?' }, class: 'block w-full px-4 py-2 text-sm hover:bg-gray-600 text-red-500' %>
         </div>
     </div>
+    </div>
+
+    <%# new item form %>
+    <%= form_with(model: [todo_list, TodoItem.new], remote: true, id: "new-item-form-#{todo_list.id}") do |form| %>
+    <div class="flex px-1">
+        <%= form.text_field :content, placeholder: 'New item', class: 'border border-gray-300 rounded w-2/3 flex-grow', required: true %>
+        <%= form.submit 'Add Item', class: ' ml-2 bg-blue-500 hover:bg-blue-600 text-white rounded w-1/3 transition-colors' %>
+    </div>
+    <% end %>
+
+    <div class="overflow-y-auto h-5/6" id="todo-items-list-<%= todo_list.id %>">
+        <ul class="text-white rounded mb-4">
+            <%# items inside todo_list %>
+            <% todo_list.todo_items.each do |item| %>
+            <li class="flex justify-between items-center p-2 hover:bg-blue-700 transition-colors">
+                <div class="flex-column items-center w-full">
+                <input type="checkbox" id="item-<%= item.id %>" class="mr-2 rounded focus:ring-blue-400" <%= 'checked' if item.completed %>>
+                <label for="item-<%= item.id %>" class="max-w-xs text-white break-words"><%= item.content %></label>
+                </div>
+            </li>
+            <% end %>
+        </ul>
+    </div>
 </div>
+
