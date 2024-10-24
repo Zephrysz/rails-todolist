@@ -27,22 +27,39 @@
 
 <script>
 
-// const newListBtn = document.getElementById('new-list-btn');
-const newTodoForm = document.getElementById('new-todo-list-form');
-
-// // new list button form 
-// newListBtn.addEventListener('click', () => {
-//   if (newTodoForm.classList.contains('hidden')) {
-//     newTodoForm.classList.remove('hidden');
-//   } else {
-//     newTodoForm.classList.add('hidden');
-//   }
-// });
+// checkbox functionality 
+function changeCheckbox(listId, itemId, isChecked) {
+    fetch(`/todo_lists/${listId}/todo_items/${itemId}/toggle_complete`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({ completed: isChecked })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.completed === true || data.completed === false) {
+            checkbox.checked = data.completed; // Update checkbox based on the response
+            console.log("Updated completion state:", data.completed);
+        } else {
+            console.error('Invalid response for completion state:', data.completed);
+        }
+    })
+    .catch(error => {
+        console.error('There was a problem with the fetch operation:', error);
+    });
+}
 
 // drag and drop backend
 function updateListOrder() {
     const listOrder = Array.from(document.querySelectorAll('.flex-shrink-0'))
-        .map(list => list.getAttribute('data-id')); // Get IDs of lists in order
+        .map(list => list.getAttribute('data-id')); 
 
     fetch('/todo_lists/update_order', {
         method: 'POST',
@@ -50,7 +67,7 @@ function updateListOrder() {
             'Content-Type': 'application/json',
             'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         },
-        body: JSON.stringify({ order: listOrder }) // Send the new order to the server
+        body: JSON.stringify({ order: listOrder })
     })
     .then(response => {
         if (!response.ok) throw new Error('Failed to update order');
@@ -63,7 +80,6 @@ function updateListOrder() {
         console.error('Error updating order:', error);
     });
 }
-
 
 function setupListEventListeners(listElement) {
   // drag and drop 
@@ -108,18 +124,32 @@ function setupListEventListeners(listElement) {
       const draggedIndex = Array.from(parent.children).indexOf(draggedList);
       const targetIndex = Array.from(parent.children).indexOf(targetList);
 
-      // Determine whether to insert before or after the target
-      if (draggedIndex < targetIndex) {
-        parent.insertBefore(draggedList, targetList.nextSibling); // Insert after the target
-      } else {
-        parent.insertBefore(draggedList, targetList); // Insert before the target
-      }
+      targetList.classList.remove('border-white', 'scale-105', 'shadow-lg', 'shadow-blue-500/50', 'transition-transform', 'duration-300');
+      draggedList.classList.remove('border-white', 'scale-105', 'shadow-lg', 'shadow-blue-500/50', 'transition-transform', 'duration-300');
 
-      targetList.classList.remove('border-2', 'border-dashed', 'border-white', 'bg-white/20');
+      const draggedListClone = draggedList.cloneNode(true);
+      const targetListClone = targetList.cloneNode(true);
+
+
+      parent.replaceChild(draggedListClone, targetList);
+      parent.replaceChild(targetListClone, draggedList);
+
+      // setupListEventListeners(draggedListClone);
+      // setupListEventListeners(targetListClone);
+
       updateListOrder(); // Update order on the backend
     }
   });
 
+  const checkboxes = listElement.querySelectorAll('input[type="checkbox"]');
+  checkboxes.forEach(checkbox => {
+    const itemId = checkbox.id.split('-')[1]; // Extract the item ID
+    const listId = listElement.getAttribute('data-id'); // Extract the list ID
+    checkbox.addEventListener('change', () => {
+      changeCheckbox(listId, itemId, checkbox.checked);
+    });
+  });
+  
   // three dot menu 
   const menuButton = listElement.querySelector('[id^="menu-button-"]');
   if (menuButton) {
@@ -153,9 +183,9 @@ function setupListEventListeners(listElement) {
         const targetListId = data.todo_list_id;
         const targetList = document.getElementById(`todo-items-list-${targetListId}`);
         targetList.innerHTML += `
-          <li class="flex justify-between items-center hover:bg-blue-700 transition-colors p-2">
-            <div class="flex-column items-center w-full cursor-pointer" onclick="toggleCheckbox('item-${data.id}')">
-              <input type="checkbox" id="item-${data.id}" class="mr-2 rounded" ${data.completed ? 'checked' : ''}>
+          <li class="flex justify-between items-center p-2 hover:bg-blue-700 transition-colors">
+            <div class="flex-column items-center w-full" onclick="changeCheckbox(${targetListId}, ${data.id}, ${data.completed})">
+              <input type="checkbox" id="item-${data.id}" class="mr-2 rounded" ${data.completed ? '' : 'checked'}>
               <label for="item-${data.id}" class="max-w-xs break-words text-white">${data.content}</label>
             </div>
           </li>`;
@@ -196,7 +226,6 @@ document.getElementById('new-todo-list-form-element').addEventListener('submit',
     const todoListsContainer = document.getElementById('scroll-inner');
     todoListsContainer.insertAdjacentHTML('afterbegin', html);
 
-    // newTodoForm.classList.add('hidden');
     this.reset();
 
     // Get the new list element and set up event listeners for it

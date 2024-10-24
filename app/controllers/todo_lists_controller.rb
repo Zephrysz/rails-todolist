@@ -16,6 +16,11 @@ class TodoListsController < ApplicationController
     def create
       @todo_list = TodoList.new(todo_list_params)
 
+      TodoList.transaction do
+        TodoList.where.not(id: @todo_list.id).update_all("position = position + 1")
+        @todo_list.position = 0
+      end
+
       if @todo_list.save
         respond_to do |format|
           format.json { render json: { id: @todo_list.id, title: @todo_list.title } }
@@ -49,12 +54,22 @@ class TodoListsController < ApplicationController
       order = params[:order]
 
       TodoList.transaction do
-          order.each_with_index do |id, index|
-              TodoList.where(id: id).update_all(position: index)
+        order.each_with_index do |id, index|
+          list = TodoList.find(id)
+          list.update(position: index)
+
+          list.todo_items.each do |item|
+            item.update(todo_list_id: list.id)
           end
+        end
       end
 
-      render json: { message: "Order updated successfully" }, status: :ok
+      render json: {
+        message: "Order updated successfully",
+        todo_items: TodoList.includes(:todo_items).map { |list|
+          [ list.id, list.todo_items.map { |item| { id: item.id, completed: item.completed } } ]
+        }.to_h
+      }, status: :ok
     end
 
     private

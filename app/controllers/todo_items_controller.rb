@@ -5,6 +5,7 @@ class TodoItemsController < ApplicationController
     def create
       @todo_list = TodoList.find(params[:todo_list_id])
       @todo_item = @todo_list.todo_items.build(todo_item_params)
+      @todo_item.completed = false if @todo_item.completed.nil?
 
       if @todo_item.save
         respond_to do |format|
@@ -21,8 +22,12 @@ class TodoItemsController < ApplicationController
 
     def toggle_complete
       @todo_item = TodoItem.find(params[:id])
-      @todo_item.update(completed: !@todo_item.completed)
-      redirect_to todo_list_path(@todo_item.todo_list)
+      @todo_item.update(completed: params[:completed])
+
+      respond_to do |format|
+        format.json { render json: { completed: @todo_item.completed } }
+        format.html { redirect_to todo_list_path(@todo_item.todo_list) }
+      end
     end
 
     def destroy

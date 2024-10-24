@@ -1,6 +1,10 @@
 Rails.application.routes.draw do
   resources :todo_lists do
-    resources :todo_items, only: [ :create, :destroy ]
+    resources :todo_items, only: [ :create, :destroy ] do
+      member do
+        post "toggle_complete"  # Add this line
+      end
+    end
     collection do
       post "update_order"
     end
