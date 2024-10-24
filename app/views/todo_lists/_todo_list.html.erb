@@ -31,7 +31,7 @@
         <% todo_list.todo_items.each do |item| %>
         <li class="flex justify-between items-center p-2 hover:bg-blue-700 transition-colors">
             <div class="flex-column items-center w-full" onclick="changeCheckbox(<%= todo_list.id %>, <%= item.id %>, item.completed)">
-            <input type="checkbox" id="item-<%= item.id %>" class="mr-2 rounded " <%= 'checked' if item.completed %>>
+            <input type="checkbox" id="item-<%= item.id %>" class="mr-2 rounded " <%= 'checked' if item.completed %> data-completed="<%= item.completed %>">
             <span><%= item.completed.to_s %></span>
             <label for="item-<%= item.id %>" class="max-w-xs text-white break-words"><%= item.content %></label>
             </div>

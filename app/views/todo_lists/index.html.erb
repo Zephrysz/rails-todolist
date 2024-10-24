@@ -45,7 +45,8 @@ function changeCheckbox(listId, itemId, isChecked) {
     })
     .then(data => {
         if (data.completed === true || data.completed === false) {
-            checkbox.checked = data.completed; // Update checkbox based on the response
+           const checkbox = document.getElementById(`item-${itemId}`);
+            checkbox.checked = data.completed; 
             console.log("Updated completion state:", data.completed);
         } else {
             console.error('Invalid response for completion state:', data.completed);
@@ -134,8 +135,8 @@ function setupListEventListeners(listElement) {
       parent.replaceChild(draggedListClone, targetList);
       parent.replaceChild(targetListClone, draggedList);
 
-      // setupListEventListeners(draggedListClone);
-      // setupListEventListeners(targetListClone);
+      setupListEventListeners(draggedListClone);
+      setupListEventListeners(targetListClone);
 
       updateListOrder(); // Update order on the backend
     }
@@ -145,6 +146,8 @@ function setupListEventListeners(listElement) {
   checkboxes.forEach(checkbox => {
     const itemId = checkbox.id.split('-')[1]; // Extract the item ID
     const listId = listElement.getAttribute('data-id'); // Extract the list ID
+    const initialCompletedState = checkbox.getAttribute('data-completed') === 'true';
+    checkbox.checked = initialCompletedState;
     checkbox.addEventListener('change', () => {
       changeCheckbox(listId, itemId, checkbox.checked);
     });
@@ -182,14 +185,22 @@ function setupListEventListeners(listElement) {
       .then(data => {
         const targetListId = data.todo_list_id;
         const targetList = document.getElementById(`todo-items-list-${targetListId}`);
+        console.log(data);
         targetList.innerHTML += `
-          <li class="flex justify-between items-center p-2 hover:bg-blue-700 transition-colors">
+          <li class="flex justify-between items-center p-2 hover:bg-blue-700 transition-colors" id="todo-items-list-${targetListId}">
             <div class="flex-column items-center w-full" onclick="changeCheckbox(${targetListId}, ${data.id}, ${data.completed})">
-              <input type="checkbox" id="item-${data.id}" class="mr-2 rounded" ${data.completed ? '' : 'checked'}>
+              <input type="checkbox" id="item-${data.id}" class="mr-2 rounded" ${data.completed ? 'checked' : ''}>
               <label for="item-${data.id}" class="max-w-xs break-words text-white">${data.content}</label>
             </div>
           </li>`;
+        const newCheckbox = document.getElementById(`item-${data.id}`);
+        if (newCheckbox) {
+          newCheckbox.addEventListener('change', () => {
+            changeCheckbox(targetListId, data.id, newCheckbox.checked);
+          });
+        }
         this.reset();
+
       })
       .catch(error => {
         console.error('Error:', error);
