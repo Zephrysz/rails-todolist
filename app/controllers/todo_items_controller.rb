@@ -32,8 +32,9 @@ class TodoItemsController < ApplicationController
 
     def destroy
       Rails.logger.info "Deleting item with ID: #{@todo_item.id}"
+      @todo_item = TodoItem.find(params[:id])
       @todo_item.destroy
-      redirect_to @todo_list, notice: "Todo Item was successfully removed."
+      head :no_content
     end
 
     private

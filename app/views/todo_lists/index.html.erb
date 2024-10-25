@@ -187,11 +187,14 @@ function setupListEventListeners(listElement) {
         const targetList = document.getElementById(`todo-items-list-${targetListId}`);
         console.log(data);
         targetList.innerHTML += `
-          <li class="flex justify-between items-center p-2 hover:bg-blue-700 transition-colors" id="todo-items-list-${targetListId}">
+          <li id="entire-item-${data.id}" class="flex rounded-lg justify-between items-center m-1 p-2 hover:bg-purple-600 transition-colors" id="todo-items-list-${targetListId}">
             <div class="flex-column items-center w-full">
               <input type="checkbox" id="item-${data.id}" class="mr-2 rounded" ${data.completed ? 'checked' : ''}>
               <label for="item-${data.id}" class="max-w-xs break-words text-white">${data.content}</label>
             </div>
+            <button onclick="deleteItem(${targetListId}, ${data.id})" class="ml-2">
+                <%= image_tag 'icons/trash.svg', class: 'h-6 w-6' %>
+            </button>
           </li>`;
         const newCheckbox = document.getElementById(`item-${data.id}`);
         if (newCheckbox) {
@@ -248,5 +251,29 @@ document.getElementById('new-todo-list-form-element').addEventListener('submit',
     alert('There was an error creating the new list.');
   });
 });
+
+//  delete items inside lists
+function deleteItem(listId, itemId) {
+    if (!confirm("Are you sure you want to delete this item?")) {
+        return; 
+    }
+
+    fetch(`/todo_lists/${listId}/todo_items/${itemId}`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Failed to delete item');
+        const itemElement = document.getElementById(`entire-item-${itemId}`);
+        itemElement.remove();
+    })
+    .catch(error => {
+        console.error('Error deleting item:', error);
+        alert('Could not delete item. Please try again.');
+    });
+}
+
 
 </script>
