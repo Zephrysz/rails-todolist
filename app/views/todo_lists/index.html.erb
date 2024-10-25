@@ -188,7 +188,7 @@ function setupListEventListeners(listElement) {
         console.log(data);
         targetList.innerHTML += `
           <li class="flex justify-between items-center p-2 hover:bg-blue-700 transition-colors" id="todo-items-list-${targetListId}">
-            <div class="flex-column items-center w-full" onclick="changeCheckbox(${targetListId}, ${data.id}, ${data.completed})">
+            <div class="flex-column items-center w-full">
               <input type="checkbox" id="item-${data.id}" class="mr-2 rounded" ${data.completed ? 'checked' : ''}>
               <label for="item-${data.id}" class="max-w-xs break-words text-white">${data.content}</label>
             </div>
