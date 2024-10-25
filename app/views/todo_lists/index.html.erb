@@ -1,20 +1,20 @@
-<div class="bg-blue-900 w-screen h-screen overflow-hidden">
+<div class="bg-purple-900 w-screen h-screen overflow-hidden">
   <%# title and new button %>
   <div class="p-4 flex justify-between items-center top-0 z-10">
-    <h1 class="text-2xl text-white font-bold">Todo Lists</h1>
+    <h1 class="text-2xl text-orange-500 font-bold">Todo Lists</h1>
 
     <%# form for list title, not hidden anymore  %>
     <div id="new-todo-list-form" class="">
       <%= form_with url: todo_lists_path, remote: true, id: "new-todo-list-form-element" do |form| %>
         <%= form.text_field :title, placeholder: 'New List Title', class: 'border border-gray-300 rounded flex-grow', required: true, name: 'todo_list[title]' %>
-        <%= form.submit 'Create List', class: 'ml-2 p-2 bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors' %>
+        <%= form.submit 'Create List', class: 'ml-2 p-2 bg-orange-500 hover:bg-orange-600 text-white rounded transition-colors' %>
       <% end %>
     </div>
   </div>
 
   <div class="flex-1 p-4 h-screen">
     <div id="list-horizontal-scroll" class="w-full h-screen scale">
-      <div class="relative flex overflow-x-auto rounded h-5/6 m-4 p-4 bg-blue-400 " id="scroll-inner">
+      <div class="relative flex overflow-x-auto rounded h-5/6 m-4 p-4 bg-gradient-to-r from-purple-600 to-purple-400 " id="scroll-inner">
         <%# lists %>
         <% @todo_lists.order(:position).each do |list| %>
           <%= render partial: 'todo_list', locals: { todo_list: list } %>
