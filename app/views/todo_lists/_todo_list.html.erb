@@ -30,12 +30,12 @@
         <%# items inside todo_list %>
         <% todo_list.todo_items.each do |item| %>
         <%# if make change of anything inside of li, need to make change in the index as well  %>
-        <li id="entire-item-<%= item.id %>" class="flex rounded-lg justify-between items-center m-1 p-2 hover:bg-purple-600 transition-colors">
+        <li id="entire-item-<%= item.id %>" class="flex rounded-lg justify-between items-center m-1 p-2 hover:bg-purple-600 transition-colors group">
             <div class="flex-column items-center w-full" onclick="changeCheckbox(<%= todo_list.id %>, <%= item.id %>, item.completed)">
                 <input type="checkbox" id="item-<%= item.id %>" class="mr-2 rounded " <%= 'checked' if item.completed %> data-completed="<%= item.completed %>">
                 <label for="item-<%= item.id %>" class="max-w-xs text-white break-words"><%= item.content %></label>
             </div>
-            <button onclick="deleteItem(<%= todo_list.id %>, <%= item.id %>)" class="ml-2">
+            <button onclick="deleteItem(<%= todo_list.id %>, <%= item.id %>)" class="ml-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                 <%= image_tag 'icons/trash.svg', class: 'h-6 w-6' %>
             </button>
         </li>

@@ -1,10 +1,10 @@
 <div class="bg-purple-900 w-screen h-screen overflow-hidden">
   <%# title and new button %>
-  <div class="p-4 flex justify-between items-center top-0 z-10">
-    <h1 class="text-2xl text-orange-500 font-bold">Todo Lists</h1>
+  <div class=" px-4 pt-4 flex justify-between items-center ">
+    <h1 class="text-2xl text-orange-500 font-bold px-4">Todo Lists</h1>
 
     <%# form for list title, not hidden anymore  %>
-    <div id="new-todo-list-form" class="">
+    <div id="new-todo-list-form" class="px-4">
       <%= form_with url: todo_lists_path, remote: true, id: "new-todo-list-form-element" do |form| %>
         <%= form.text_field :title, placeholder: 'New List Title', class: 'border border-gray-300 rounded flex-grow', required: true, name: 'todo_list[title]' %>
         <%= form.submit 'Create List', class: 'ml-2 p-2 bg-orange-500 hover:bg-orange-600 text-white rounded transition-colors' %>
@@ -185,17 +185,37 @@ function setupListEventListeners(listElement) {
       .then(data => {
         const targetListId = data.todo_list_id;
         const targetList = document.getElementById(`todo-items-list-${targetListId}`);
-        console.log(data);
-        targetList.innerHTML += `
-          <li id="entire-item-${data.id}" class="flex rounded-lg justify-between items-center m-1 p-2 hover:bg-purple-600 transition-colors" id="todo-items-list-${targetListId}">
-            <div class="flex-column items-center w-full">
-              <input type="checkbox" id="item-${data.id}" class="mr-2 rounded" ${data.completed ? 'checked' : ''}>
-              <label for="item-${data.id}" class="max-w-xs break-words text-white">${data.content}</label>
-            </div>
-            <button onclick="deleteItem(${targetListId}, ${data.id})" class="ml-2">
-                <%= image_tag 'icons/trash.svg', class: 'h-6 w-6' %>
-            </button>
-          </li>`;
+    
+        const listItem = document.createElement("li");
+        listItem.id = `entire-item-${data.id}`;
+        listItem.className = "flex rounded-lg justify-between items-center m-1 p-2 hover:bg-purple-600 transition-colors group";
+
+        const innerDiv = document.createElement("div");
+        innerDiv.className = "flex-column items-center w-full";
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.id = `item-${data.id}`;
+        checkbox.className = "mr-2 rounded";
+        if (data.completed) checkbox.checked = true;
+
+        const label = document.createElement("label");
+        label.setAttribute("for", `item-${data.id}`);
+        // idk why m-1 is needed here 
+        label.className = "max-w-xs break-words text-white m-1"; 
+        label.textContent = data.content; 
+
+        const button = document.createElement("button");
+        button.onclick = () => deleteItem(targetListId, data.id);
+        button.className = "ml-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200";
+        button.innerHTML = `<%= image_tag 'icons/trash.svg', class: 'h-6 w-6' %>`;
+
+        innerDiv.appendChild(checkbox);
+        innerDiv.appendChild(label);
+        listItem.appendChild(innerDiv);
+        listItem.appendChild(button);
+        targetList.appendChild(listItem);
+
         const newCheckbox = document.getElementById(`item-${data.id}`);
         if (newCheckbox) {
           newCheckbox.addEventListener('change', () => {
