@@ -45,7 +45,7 @@ function changeCheckbox(listId, itemId, isChecked) {
     })
     .then(data => {
         if (data.completed === true || data.completed === false) {
-           const checkbox = document.getElementById(`item-${itemId}`);
+            const checkbox = document.getElementById(`item-${itemId}`);
             checkbox.checked = data.completed; 
             console.log("Updated completion state:", data.completed);
         } else {
@@ -161,7 +161,17 @@ function setupListEventListeners(listElement) {
     menuButton.addEventListener('click', () => {
       menu.classList.toggle('hidden');
     });
+    
+      if (!menu.contains(event.target)) {
+        menu.classList.add('hidden');
+      }
+    document.addEventListener('click', (event) => {
+    if (!menu.contains(event.target) && !menuButton.contains(event.target)) {
+      menu.classList.add('hidden');
+    }
+  });
   }
+  
 
   // item creation form 
   const newItemForm = listElement.querySelector('[id^="new-item-form-"]');
@@ -308,6 +318,17 @@ function toggleEditTitle(listId) {
     document.getElementById(`title-display-${editingId}`).classList.remove('hidden');
   }
 
+  document.addEventListener('click', (event) => {
+    // sair da edicao clicando em outro local
+    if (editingId !== null && titleInput && titleDisplay) {
+      if (!titleInput.contains(event.target) && !titleDisplay.contains(event.target)) {
+        titleInput.classList.add('hidden');
+        titleDisplay.classList.remove('hidden');
+        editingId = null; 
+      }
+    }
+  });
+
   titleDisplay.classList.toggle('hidden');
   titleInput.classList.toggle('hidden');
 
@@ -320,7 +341,6 @@ function toggleEditTitle(listId) {
         saveTitle(listId, titleInput.value);
         titleInput.classList.add('hidden');
         titleDisplay.classList.remove('hidden'); 
-        editingId = null; 
       }
     });
   }
