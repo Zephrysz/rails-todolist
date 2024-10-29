@@ -295,5 +295,59 @@ function deleteItem(listId, itemId) {
     });
 }
 
+// edit list title 
+let editingId = null;
+
+function toggleEditTitle(listId) {
+  const titleDisplay = document.getElementById(`title-display-${listId}`);
+  const titleInput = document.getElementById(`title-input-${listId}`);
+
+  if (editingId !== null && editingId !== listId) {
+    // Oculta o input de outras listas
+    document.getElementById(`title-input-${editingId}`).classList.add('hidden');
+    document.getElementById(`title-display-${editingId}`).classList.remove('hidden');
+  }
+
+  titleDisplay.classList.toggle('hidden');
+  titleInput.classList.toggle('hidden');
+
+  if (titleInput.classList.contains('hidden')) {
+    editingId = null; 
+  } else {
+    editingId = listId; 
+    titleInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        saveTitle(listId, titleInput.value);
+        titleInput.classList.add('hidden');
+        titleDisplay.classList.remove('hidden'); 
+        editingId = null; 
+      }
+    });
+  }
+}
+
+
+function saveTitle(listId, newTitle) {
+  fetch(`/todo_lists/${listId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+    },
+    body: JSON.stringify({ todo_list: { title: newTitle } })
+  })
+  .then(response => {
+    if (!response.ok) throw new Error('Failed to update title');
+    return response.json();
+  })
+  .then(data => {
+    document.getElementById(`title-display-${listId}`).textContent = data.title;
+    // toggleEditTitle(listId); 
+  })
+  .catch(error => {
+    console.error('Error updating title:', error);
+    alert('Could not update the title. Please try again.');
+  });
+}
 
 </script>

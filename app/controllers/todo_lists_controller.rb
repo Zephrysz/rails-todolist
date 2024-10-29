@@ -39,9 +39,15 @@ class TodoListsController < ApplicationController
 
     def update
       if @todo_list.update(todo_list_params)
-        redirect_to todo_lists_path, notice: "Todo List was successfully updated."
+        respond_to do |format|
+          format.json { render json: { title: @todo_list.title }, status: :ok }
+          format.html { render partial: "todo_lists/todo_list", locals: { todo_list: @todo_list }, status: :ok }
+        end
       else
-        render :edit
+        respond_to do |format|
+          format.json { render json: @todo_list.errors, status: :unprocessable_entity }
+          format.html { render :edit }
+        end
       end
     end
 
