@@ -58,17 +58,14 @@ function changeCheckbox(listId, itemId, isChecked) {
 }
 
 // drag and drop backend
-function updateListOrder() {
-    const listOrder = Array.from(document.querySelectorAll('.flex-shrink-0'))
-        .map(list => list.getAttribute('data-id')); 
-
+function updateListOrder(draggedId, targetId) {
     fetch('/todo_lists/update_order', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         },
-        body: JSON.stringify({ order: listOrder })
+        body: JSON.stringify({ dragged_id: draggedId, target_id: targetId })
     })
     .then(response => {
         if (!response.ok) throw new Error('Failed to update order');
@@ -138,7 +135,7 @@ function setupListEventListeners(listElement) {
       setupListEventListeners(draggedListClone);
       setupListEventListeners(targetListClone);
 
-      updateListOrder(); // Update order on the backend
+      updateListOrder(draggedList.getAttribute('data-id'), targetList.getAttribute('data-id')); // Update order on the backend
     }
   });
 
@@ -162,9 +159,6 @@ function setupListEventListeners(listElement) {
       menu.classList.toggle('hidden');
     });
     
-      if (!menu.contains(event.target)) {
-        menu.classList.add('hidden');
-      }
     document.addEventListener('click', (event) => {
     if (!menu.contains(event.target) && !menuButton.contains(event.target)) {
       menu.classList.add('hidden');

@@ -57,25 +57,22 @@ class TodoListsController < ApplicationController
     end
 
     def update_order
-      order = params[:order]
+      dragged_id = params[:dragged_id]
+      target_id = params[:target_id]
 
       TodoList.transaction do
-        order.each_with_index do |id, index|
-          list = TodoList.find(id)
-          list.update(position: index)
+        dragged_list = TodoList.find(dragged_id)
+        target_list = TodoList.find(target_id)
 
-          list.todo_items.each do |item|
-            item.update(todo_list_id: list.id)
-          end
-        end
+        dragged_position = dragged_list.position
+        # update! sends an exception if there's an error, to callback the transaction
+        dragged_list.update!(position: target_list.position)
+        target_list.update!(position: dragged_position)
       end
 
       render json: {
-        message: "Order updated successfully",
-        todo_items: TodoList.includes(:todo_items).map { |list|
-          [ list.id, list.todo_items.map { |item| { id: item.id, completed: item.completed } } ]
-        }.to_h
-      }, status: :ok
+       status: "success"
+      }
     end
 
     private
